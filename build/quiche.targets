@@ -1,0 +1,16 @@
+<Project>
+
+  <Target Name="_Quiche_Validate">
+    <Error Text="Unable to detect Quiche library path, OS platform is not recognized" Condition="'$(_QuicheLibName)' == '' And !Exists('$(QuicheLibPath)')" />
+    <Error Text="Could not find $(_QuicheLibName) at $(QuicheLibPath)" Condition="!Exists('$(QuicheLibPath)')" />
+  </Target>
+
+  <Target Name="_Quiche_Debug">
+    <Message Text="Quiche Path: $(QuicheLibPath)" Importance="high"  />
+  </Target>
+
+  <Target Name="_Quiche_Copy" DependsOnTargets="_Quiche_Validate" AfterTargets="Build">
+    <Copy SourceFiles="$(QuicheLibPath)" DestinationFolder="$(OutputPath)" />
+  </Target>
+
+</Project>

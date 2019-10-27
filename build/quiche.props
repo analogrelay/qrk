@@ -1,0 +1,15 @@
+<Project>
+
+  <PropertyGroup Label="Quiche Stuff">
+    <_QuicheLibName Condition="$([MSBuild]::IsOSPlatform('OSX'))">quiche.dylib</_QuicheLibName>
+    <_QuicheLibName Condition="$([MSBuild]::IsOSPlatform('Linux'))">quiche.so</_QuicheLibName>
+    <_QuicheLibName Condition="$([MSBuild]::IsOSPlatform('Windows'))">quiche.dll</_QuicheLibName>
+    <_QuicheDefaultConfig>debug</_QuicheDefaultConfig>
+    <_QuicheDefaultConfig Condition="'$(Configuration)' == 'Release'">release</_QuicheDefaultConfig>
+    <QuicheConfiguration Condition="'$(QuicheConfiguration)' == ''">$(_QuicheDefaultConfig)</QuicheConfiguration>
+    <_QuicheLocalDir>$(MSBuildThisFileDirectory)../vendor/quiche/target/$(QuicheConfiguration)/</_QuicheLocalDir>
+    <QuicheLibDir Condition="'$(QuicheLibDir)' == ''">$(_QuicheLocalDir)</QuicheLibDir>
+    <QuicheLibPath Condition="'$(QuicheLibPath)' == ''">$(QuicheLibDir)$(_QuicheLibName)</QuicheLibPath>
+  </PropertyGroup>
+
+</Project>
