@@ -83,5 +83,86 @@ namespace Net.Quic.Quiche
 
         [DllImport(DllName)]
         public static extern IntPtr quiche_version();
+
+        public delegate void DebugLoggingCallback(IntPtr message, IntPtr state);
+        [DllImport(DllName)]
+        public static extern int quiche_enable_debug_logging(
+            DebugLoggingCallback cb,
+            IntPtr state);
+
+        [DllImport(DllName)]
+        public static extern IntPtr quiche_config_new(uint version);
+
+        /// <summary>Configures whether to verify the peer's certificate.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_verify_peer(IntPtr config, bool v);
+
+        /// <summary>Configures whether to send GREASE.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_grease(IntPtr config, bool v);
+
+        /// <summary>Enables logging of secrets.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_log_keys(IntPtr config);
+
+        /// <summary>Enables sending or receiving early data.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_enable_early_data(IntPtr config);
+
+        /// <summary>Configures the list of supported application protocols.</summary>
+        [DllImport(DllName)]
+        public static extern int quiche_config_set_application_protos(
+            IntPtr config,
+            IntPtr protos,
+
+            // Need nint/nuint :) https://github.com/dotnet/csharplang/issues/435
+            UIntPtr protos_len);
+
+        /// <summary>Sets the `idle_timeout` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_idle_timeout(IntPtr config, long v);
+
+        /// <summary>Sets the `max_packet_size` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_max_packet_size(IntPtr config, long v);
+
+        /// <summary>Sets the `initial_max_data` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_initial_max_data(IntPtr config, long v);
+
+        /// <summary>Sets the `initial_max_stream_data_bidi_local` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_initial_max_stream_data_bidi_local(IntPtr config, long v);
+
+        /// <summary>Sets the `initial_max_stream_data_bidi_remote` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_initial_max_stream_data_bidi_remote(IntPtr config, long v);
+
+        /// <summary>Sets the `initial_max_stream_data_uni` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_initial_max_stream_data_uni(IntPtr config, long v);
+
+        /// <summary>Sets the `initial_max_streams_bidi` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_initial_max_streams_bidi(IntPtr config, long v);
+
+        /// <summary>Sets the `initial_max_streams_uni` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_initial_max_streams_uni(IntPtr config, long v);
+
+        /// <summary>Sets the `ack_delay_exponent` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_ack_delay_exponent(IntPtr config, long v);
+
+        /// <summary>Sets the `max_ack_delay` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_max_ack_delay(IntPtr config, long v);
+
+        /// <summary>Sets the `disable_active_migration` transport parameter.</summary>
+        [DllImport(DllName)]
+        public static extern void quiche_config_set_disable_active_migration(IntPtr config, bool v);
+
+        [DllImport(DllName)]
+        internal static extern void quiche_config_free(IntPtr handle);
     }
 }
