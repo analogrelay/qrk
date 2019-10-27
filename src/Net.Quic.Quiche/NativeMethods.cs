@@ -113,7 +113,7 @@ namespace Net.Quic.Quiche
         [DllImport(DllName)]
         public static extern int quiche_config_set_application_protos(
             IntPtr config,
-            IntPtr protos,
+            byte[] protos,
 
             // Need nint/nuint :) https://github.com/dotnet/csharplang/issues/435
             UIntPtr protos_len);
