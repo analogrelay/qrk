@@ -13,74 +13,6 @@ namespace Net.Quic.Quiche
         public const uint QUICHE_MAX_CONN_ID_LEN = 20;
         public const uint QUICHE_MIN_CLIENT_INITIAL_LEN = 200;
 
-        public enum quiche_error
-        {
-            /// <summary>
-            /// There is no more work to do.
-            /// </summary>
-            QUICHE_ERR_DONE = -1,
-
-            /// <summary>
-            /// The provided buffer is too short.
-            /// </summary>
-            QUICHE_ERR_BUFFER_TOO_SHORT = -2,
-
-            /// <summary>
-            /// The provided packet cannot be parsed because its version is unknown.
-            /// </summary>
-            QUICHE_ERR_UNKNOWN_VERSION = -3,
-
-            /// <summary>
-            /// The provided packet cannot be parsed because it contains an invalid frame.
-            /// </summary>
-            QUICHE_ERR_INVALID_FRAME = -4,
-
-            /// <summary>
-            /// The provided packet cannot be parsed.
-            /// </summary>
-            QUICHE_ERR_INVALID_PACKET = -5,
-
-            /// <summary>
-            /// The operation cannot be completed because the connection is in an invalid state.
-            /// </summary>
-            QUICHE_ERR_INVALID_STATE = -6,
-
-            /// <summary>
-            /// The operation cannot be completed because the stream is in an invalid state.
-            /// </summary>
-            QUICHE_ERR_INVALID_STREAM_STATE = -7,
-
-            /// <summary>
-            /// The peer's transport params cannot be parsed.
-            /// </summary>
-            QUICHE_ERR_INVALID_TRANSPORT_PARAM = -8,
-
-            /// <summary>
-            /// A cryptographic operation failed.
-            /// </summary>
-            QUICHE_ERR_CRYPTO_FAIL = -9,
-
-            /// <summary>
-            /// The TLS handshake failed.
-            /// </summary>
-            QUICHE_ERR_TLS_FAIL = -10,
-
-            /// <summary>
-            /// The peer violated the local flow control limits.
-            /// </summary>
-            QUICHE_ERR_FLOW_CONTROL = -11,
-
-            /// <summary>
-            /// The peer violated the local stream limits.
-            /// </summary>
-            QUICHE_ERR_STREAM_LIMIT = -12,
-
-            /// <summary>
-            /// The received data exceeds the stream's final size.
-            /// </summary>
-            QUICHE_ERR_FINAL_SIZE = -13,
-        }
-
         [DllImport(DllName)]
         public static extern IntPtr quiche_version();
 
@@ -163,6 +95,44 @@ namespace Net.Quic.Quiche
         public static extern void quiche_config_set_disable_active_migration(IntPtr config, bool v);
 
         [DllImport(DllName)]
-        internal static extern void quiche_config_free(IntPtr handle);
+        public static extern void quiche_config_free(IntPtr handle);
+
+        [DllImport(DllName)]
+        public unsafe static extern IntPtr quiche_connect(
+            byte* serverName, byte* scid, UIntPtr scid_len, QuicheConfig config);
+
+        [DllImport(DllName)]
+        public unsafe static extern IntPtr quiche_conn_recv(IntPtr conn, byte* buf, UIntPtr bufLen);
+
+        [DllImport(DllName)]
+        public unsafe static extern IntPtr quiche_conn_send(IntPtr conn, byte* @out, UIntPtr outLen);
+
+        [DllImport(DllName)]
+        public static extern bool quiche_conn_is_established(IntPtr conn);
+
+        [DllImport(DllName)]
+        public static extern bool quiche_conn_is_in_early_data(IntPtr conn);
+
+        [DllImport(DllName)]
+        public static extern bool quiche_conn_is_closed(IntPtr conn);
+
+        [DllImport(DllName)]
+        public unsafe static extern void quiche_conn_application_proto(IntPtr conn, out IntPtr @out, out UIntPtr outLen);
+
+        [DllImport(DllName)]
+        public unsafe static extern IntPtr quiche_conn_stream_send(IntPtr conn, ulong streamId, byte* buf, UIntPtr len, bool fin);
+
+        [DllImport(DllName)]
+        public unsafe static extern IntPtr quiche_conn_stream_recv(
+            IntPtr conn, ulong stream_id, byte* @out, UIntPtr buf_len, out bool fin);
+
+        [DllImport(DllName)]
+        public static extern IntPtr quiche_conn_readable(IntPtr conn);
+
+        [DllImport(DllName)]
+        public static extern bool quiche_stream_iter_next(IntPtr iter, out ulong streamId);
+
+        [DllImport(DllName)]
+        public static extern void quiche_stream_iter_free(IntPtr iter);
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Net.Quic.Quiche
 {
@@ -10,17 +8,15 @@ namespace Net.Quic.Quiche
     /// </summary>
     public class QuicheConfig: SafeHandle
     {
-        private IntPtr _handle;
-
         public QuicheConfig(IntPtr handle): base(handle, ownsHandle: true)
         {
         }
 
-        public override bool IsInvalid => _handle == IntPtr.Zero;
+        public override bool IsInvalid => handle == IntPtr.Zero;
 
         protected override bool ReleaseHandle()
         {
-            NativeMethods.quiche_config_free(_handle);
+            NativeMethods.quiche_config_free(handle);
             return true;
         }
     }

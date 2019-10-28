@@ -14,10 +14,10 @@ namespace Net.Quic.Quiche
 
         // TODO: Certs?
 
-        public IList<ReadOnlyMemory<byte>> ApplicationProtocols { get; }
+        public IList<TlsApplicationProtocol> ApplicationProtocols { get; } = new List<TlsApplicationProtocol>();
         public bool VerifyPeerCertificate { get; set; }
         public bool EnableTlsGrease { get; set; }
-        public bool AllowLoggingOfSecrets { get; set; }
+        public bool EnableSslKeyLogging { get; set; }
         public bool EnableEarlyData { get; set; }
         public TimeSpan IdleTimeout { get; set; } = TimeSpan.Zero;
         public long? MaxPacketSize { get; set; } = null;
@@ -34,6 +34,14 @@ namespace Net.Quic.Quiche
         public QuicheConfigBuilder(QuicVersion version)
         {
             _version = version;
+        }
+
+        public QuicheConfigBuilder AddApplicationProtocol(string protocol) => AddApplicationProtocol(new TlsApplicationProtocol(protocol));
+
+        public QuicheConfigBuilder AddApplicationProtocol(TlsApplicationProtocol protocol)
+        {
+            ApplicationProtocols.Add(protocol);
+            return this;
         }
 
         public QuicheConfig Build()
@@ -59,7 +67,7 @@ namespace Net.Quic.Quiche
             {
                 // Build a single buffer that is a set of non-empty 8-bit length prefixed strings:
                 // For example "\x08http/1.1\x08http/0.9"
-                var totalLength = ApplicationProtocols.Count + ApplicationProtocols.Sum(p => p.Length);
+                var totalLength = ApplicationProtocols.Count + ApplicationProtocols.Sum(p => p.Value.Length);
 
                 // PERF: Could probably stackalloc this if it's small enough
                 // I believe quiche copies the data out as soon as the function is called, so it's safe to do so.
@@ -67,15 +75,15 @@ namespace Net.Quic.Quiche
                 var offset = 0;
                 foreach (var protocol in ApplicationProtocols)
                 {
-                    if (protocol.Length > byte.MaxValue)
+                    if (protocol.Value.Length > byte.MaxValue)
                     {
-                        var protocolName = Encoding.UTF8.GetString(protocol.ToArray());
+                        var protocolName = Encoding.UTF8.GetString(protocol.Value.ToArray());
                         var message = $"Application Protocol value is too long: {protocolName}";
                         throw new InvalidOperationException(message);
                     }
-                    buf[offset] = (byte)protocol.Length;
-                    protocol.CopyTo(buf.AsMemory(offset + 1));
-                    offset += protocol.Length + 1;
+                    buf[offset] = (byte)protocol.Value.Length;
+                    protocol.Value.CopyTo(buf.AsMemory(offset + 1));
+                    offset += protocol.Value.Length + 1;
                 }
 
                 // Set the value on the internal config struct
@@ -90,7 +98,7 @@ namespace Net.Quic.Quiche
             NativeMethods.quiche_config_grease(config, EnableTlsGrease);
             NativeMethods.quiche_config_set_disable_active_migration(config, !AllowActiveMigration);
 
-            if (AllowLoggingOfSecrets)
+            if (EnableSslKeyLogging)
             {
                 NativeMethods.quiche_config_log_keys(config);
             }

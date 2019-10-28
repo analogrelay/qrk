@@ -4,6 +4,7 @@ namespace Net.Quic.Quiche
 {
     public struct QuicVersion: IEquatable<QuicVersion>
     {
+        // Technically any `0x?a?a?a?a` value triggers negotiation.
         public static readonly QuicVersion Negotiate = new QuicVersion(0xbabababa);
 
         public uint Value { get; set; }

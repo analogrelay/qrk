@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)../../build/quiche.props" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Net.Quic.Quiche\Net.Quic.Quiche.csproj" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)../../build/quiche.targets" />
+</Project>
