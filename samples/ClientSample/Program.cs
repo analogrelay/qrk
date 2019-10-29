@@ -28,7 +28,7 @@ namespace ClientSample
                 return 1;
             }
 
-            Quiche.EnableDebugLogging(Console.Error.WriteLine);
+            //Quiche.EnableDebugLogging(Console.Error.WriteLine);
             Console.WriteLine($"Quiche Version: {Quiche.Version}");
 
             // Prepare Quiche Config

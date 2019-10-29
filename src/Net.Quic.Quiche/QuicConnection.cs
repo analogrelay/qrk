@@ -35,12 +35,13 @@ namespace Net.Quic.Quiche
         private Channel<bool> _sendSignal = Channel.CreateBounded<bool>(new BoundedChannelOptions(1)
         {
             FullMode = BoundedChannelFullMode.DropWrite,
-            SingleReader = true
+            SingleReader = true,
+            AllowSynchronousContinuations = false,
         });
 
-        private readonly TaskCompletionSource<object> _establishedTcs = new TaskCompletionSource<object>();
-        private readonly TaskCompletionSource<object> _earlyDataTcs = new TaskCompletionSource<object>();
-        private readonly TaskCompletionSource<object> _closedTcs = new TaskCompletionSource<object>();
+        private readonly TaskCompletionSource<object> _establishedTcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<object> _earlyDataTcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<object> _closedTcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         /// <summary>
         /// Creates a new connectionusing the specified config 
@@ -228,6 +229,7 @@ namespace Net.Quic.Quiche
             while (!_closedTcs.Task.IsCompleted)
             {
                 // Recieve from the socket
+                Log("Waiting for incoming datagram");
                 var recv = await _client.ReceiveAsync();
                 Log($"Received incoming datagram of {recv.Buffer.Length} bytes.");
 
@@ -255,6 +257,7 @@ namespace Net.Quic.Quiche
                 // Update TCS state
                 UpdateTaskState();
             }
+            Log("Ending incoming loop");
         }
 
         private async Task FlushOutgoingAsync()
@@ -266,6 +269,7 @@ namespace Net.Quic.Quiche
                 {
                     continue;
                 }
+
                 // Ask quiche for a datagram.
                 var buf = new byte[Constants.MAX_DATAGRAM_SIZE];
                 var written = GetOutgoingDatagram(buf);
@@ -330,15 +334,18 @@ namespace Net.Quic.Quiche
         {
             if (!_establishedTcs.Task.IsCompleted && NativeMethods.quiche_conn_is_established(_connection))
             {
+                Log("Connection established.");
                 _establishedTcs.TrySetResult(null);
             }
             if (!_closedTcs.Task.IsCompleted && NativeMethods.quiche_conn_is_closed(_connection))
             {
+                Log("Connection closed.");
                 _closedTcs.TrySetResult(null);
                 _sendSignal.Writer.TryComplete();
             }
             if (!_earlyDataTcs.Task.IsCompleted && NativeMethods.quiche_conn_is_in_early_data(_connection))
             {
+                Log("Connection ready for early data.");
                 _earlyDataTcs.TrySetResult(null);
             }
         }
