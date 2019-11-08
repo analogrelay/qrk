@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "ClientSample": {
-      "commandName": "Project",
-      "commandLineArgs": "quic.tech 4433"
-    }
-  }
-}

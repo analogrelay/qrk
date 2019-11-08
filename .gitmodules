@@ -1,3 +1,0 @@
-[submodule "vendor/quiche"]
-	path = vendor/quiche
-	url = https://github.com/cloudflare/quiche

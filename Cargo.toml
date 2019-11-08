@@ -1,0 +1,9 @@
+[package]
+name = "qrk"
+version = "0.1.0"
+authors = ["Andrew Stanton-Nurse <andrew@stanton-nurse.com>"]
+edition = "2018"
+
+[dependencies]
+quiche = "0.1.0"
+tokio = "0.2.0-alpha.6"
