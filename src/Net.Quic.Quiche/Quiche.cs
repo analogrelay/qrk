@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
+using Microsoft.Extensions.Logging;
+using Net.Quic.Quiche.Internal;
 
 namespace Net.Quic.Quiche
 {
@@ -15,19 +15,26 @@ namespace Net.Quic.Quiche
 
         public static string Version => _version.Value;
 
-        public static void EnableDebugLogging(Action<string> callback)
+        /// <summary>
+        /// Enables debug logging in Quiche. This method will NOT keep <paramref name="logger"/> alive, so it's
+        /// expected that the caller stores it somewhere useful. When <paramref name="logger"/> is freed, the callback will
+        /// no longer function.
+        /// </summary>
+        /// <param name="logger">The logger to log to.</param>
+        public static void EnableDebugLogging(ILogger logger)
         {
             static void NativeCallback(IntPtr str, IntPtr state)
             {
-                var callbackHandle = GCHandle.FromIntPtr(state);
-                var callback = (Action<string>)callbackHandle.Target;
-                var message = MarshalUtilities.Utf8NullTerminatedToString(str);
-                callback(message);
+                var logger = (ILogger)((GCHandle)state).Target;
+                if(logger != null)
+                {
+                    var message = MarshalUtilities.Utf8NullTerminatedToString(str);
+                    logger.LogDebug(message);
+                }
             }
 
-            // PERF: This will leak the callback, which is OK for now.
-            var handle = GCHandle.Alloc(callback, GCHandleType.Normal);
-            NativeMethods.quiche_enable_debug_logging(NativeCallback, GCHandle.ToIntPtr(handle));
+            var handle = GCHandle.Alloc(logger, GCHandleType.Weak);
+            NativeMethods.quiche_enable_debug_logging(NativeCallback, (IntPtr)handle);
         }
     }
 }

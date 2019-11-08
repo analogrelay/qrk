@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Net.Quic.Quiche.Internal;
 
 namespace Net.Quic.Quiche
 {

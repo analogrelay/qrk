@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Security;
 using System.Text;
+using Net.Quic.Quiche.Internal;
 
 namespace Net.Quic.Quiche
 {
@@ -14,7 +16,7 @@ namespace Net.Quic.Quiche
 
         // TODO: Certs?
 
-        public IList<TlsApplicationProtocol> ApplicationProtocols { get; } = new List<TlsApplicationProtocol>();
+        public IList<SslApplicationProtocol> ApplicationProtocols { get; } = new List<SslApplicationProtocol>();
         public bool VerifyPeerCertificate { get; set; }
         public bool EnableTlsGrease { get; set; }
         public bool EnableSslKeyLogging { get; set; }
@@ -36,9 +38,9 @@ namespace Net.Quic.Quiche
             _version = version;
         }
 
-        public QuicheConfigBuilder AddApplicationProtocol(string protocol) => AddApplicationProtocol(new TlsApplicationProtocol(protocol));
+        public QuicheConfigBuilder AddApplicationProtocol(string protocol) => AddApplicationProtocol(new SslApplicationProtocol(protocol));
 
-        public QuicheConfigBuilder AddApplicationProtocol(TlsApplicationProtocol protocol)
+        public QuicheConfigBuilder AddApplicationProtocol(SslApplicationProtocol protocol)
         {
             ApplicationProtocols.Add(protocol);
             return this;
@@ -67,7 +69,7 @@ namespace Net.Quic.Quiche
             {
                 // Build a single buffer that is a set of non-empty 8-bit length prefixed strings:
                 // For example "\x08http/1.1\x08http/0.9"
-                var totalLength = ApplicationProtocols.Count + ApplicationProtocols.Sum(p => p.Value.Length);
+                var totalLength = ApplicationProtocols.Count + ApplicationProtocols.Sum(p => p.Protocol.Length);
 
                 // PERF: Could probably stackalloc this if it's small enough
                 // I believe quiche copies the data out as soon as the function is called, so it's safe to do so.
@@ -75,15 +77,15 @@ namespace Net.Quic.Quiche
                 var offset = 0;
                 foreach (var protocol in ApplicationProtocols)
                 {
-                    if (protocol.Value.Length > byte.MaxValue)
+                    if (protocol.Protocol.Length > byte.MaxValue)
                     {
-                        var protocolName = Encoding.UTF8.GetString(protocol.Value.ToArray());
+                        var protocolName = Encoding.UTF8.GetString(protocol.Protocol.ToArray());
                         var message = $"Application Protocol value is too long: {protocolName}";
                         throw new InvalidOperationException(message);
                     }
-                    buf[offset] = (byte)protocol.Value.Length;
-                    protocol.Value.CopyTo(buf.AsMemory(offset + 1));
-                    offset += protocol.Value.Length + 1;
+                    buf[offset] = (byte)protocol.Protocol.Length;
+                    protocol.Protocol.CopyTo(buf.AsMemory(offset + 1));
+                    offset += protocol.Protocol.Length + 1;
                 }
 
                 // Set the value on the internal config struct

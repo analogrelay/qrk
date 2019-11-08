@@ -5,7 +5,11 @@ using System;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Net.Quic.Quiche;
+using Net.Quic.Quiche.Features;
 
 namespace ClientSample
 {
@@ -21,60 +25,36 @@ namespace ClientSample
                 Console.Error.WriteLine($"Usage: {typeof(Program).Assembly.GetName().Name} <host> <port>");
                 return 1;
             }
-            var host = args[0];
+            var hostName = args[0];
             if (!int.TryParse(args[1], out var port))
             {
                 Console.Error.WriteLine($"Invalid port number: {args[1]}.");
                 return 1;
             }
 
-            //Quiche.EnableDebugLogging(Console.Error.WriteLine);
-            Console.WriteLine($"Quiche Version: {Quiche.Version}");
-
-            // Prepare Quiche Config
-            using var config =
-                new QuicheConfigBuilder(QuicVersion.Negotiate)
+            using var host = Host.CreateDefaultBuilder()
+                .ConfigureLogging(logging =>
                 {
-                    IdleTimeout = TimeSpan.FromSeconds(5),
-                    MaxPacketSize = 1350,
-                    InitialMaxData = 10_000_000,
-                    InitialMaxStreamDataBiDiLocal = 1_000_000,
-                    InitialMaxStreamDataUni = 1_000_000,
-                    InitialMaxStreamsBidi = 100,
-                    InitialMaxStreamsUni = 100,
-                    AllowActiveMigration = false,
-                    EnableSslKeyLogging = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SSLKEYLOGFILE"))
-                }
-                .AddApplicationProtocol("http/0.9")
-                .Build();
-            Console.WriteLine("Created config");
-
-            var connection = new QuicConnection(config);
-            Console.WriteLine($"Connecting (SCID: {connection.SourceConnectionId}) ...");
-            await connection.ConnectAsync(new DnsEndPoint(host, port));
-
-            Console.WriteLine($"Connected. ALPN negotiated protocol: '{connection.ApplicationProtocol}'.");
-
-            // Create a stream
-            var stream = connection.CreateStream(QuicStreamType.Bidirectional, 4);
-            Console.WriteLine("Sending HTTP/0.9 request...");
-            stream.Send(RequestContent, fin: true);
-            Console.WriteLine("Sent");
-
-            // Keep receiving until we can't receive any more.
-            while (true)
-            {
-                foreach (var readable in connection.GetReadableStreams())
+                    logging.AddFilter("ClientSample", LogLevel.Trace);
+                    logging.AddFilter("Net.Quic.Quiche", LogLevel.Trace);
+                })
+                .ConfigureServices(services =>
                 {
-                    var buf = new byte[1024];
-                    int recv;
-                    while ((recv = readable.Receive(buf, out var fin)) != 0)
+                    services.Configure<CommandLineOptions>(options =>
                     {
-                        var str = Encoding.UTF8.GetString(buf, 0, recv);
-                        Console.WriteLine($"Received on {readable.Id}: {str}");
-                    }
-                }
-            }
+                        options.Host = hostName;
+                        options.Port = port;
+                    });
+                    services.AddSingleton<Application>();
+                })
+                .Build();
+            await host.StartAsync();
+
+            var app = host.Services.GetRequiredService<Application>();
+            var exitCode = await app.RunAsync();
+            await host.StopAsync();
+
+            return exitCode;
         }
     }
 }

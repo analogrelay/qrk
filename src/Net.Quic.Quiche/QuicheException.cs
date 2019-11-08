@@ -20,6 +20,17 @@ namespace Net.Quic.Quiche
 
         public QuicheErrorCode ErrorCode { get; }
 
+        public static bool TryCreate(IntPtr result, out QuicheException exception)
+        {
+            if((int)result < 0)
+            {
+                exception = FromErrorCode((QuicheErrorCode)result);
+                return true;
+            }
+            exception = null;
+            return false;
+        }
+
         public static QuicheException FromErrorCode(QuicheErrorCode errorCode)
         {
             return new QuicheException(errorCode, errorCode.GetDescription());

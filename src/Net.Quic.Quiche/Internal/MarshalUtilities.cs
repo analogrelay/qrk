@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Net.Quic.Quiche
+namespace Net.Quic.Quiche.Internal
 {
     internal static class MarshalUtilities
     {

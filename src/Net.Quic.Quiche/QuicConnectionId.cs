@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Internal;
+using Net.Quic.Quiche.Internal;
 
 namespace Net.Quic.Quiche
 {

@@ -3,7 +3,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Net.Quic.Quiche
+namespace Net.Quic.Quiche.Internal
 {
     internal static class NativeMethods
     {
@@ -100,6 +100,9 @@ namespace Net.Quic.Quiche
         [DllImport(DllName)]
         public unsafe static extern IntPtr quiche_connect(
             byte* serverName, byte* scid, UIntPtr scid_len, QuicheConfig config);
+
+        [DllImport(DllName)]
+        public static extern void quiche_conn_free(IntPtr conn);
 
         [DllImport(DllName)]
         public unsafe static extern IntPtr quiche_conn_recv(IntPtr conn, byte* buf, UIntPtr bufLen);
